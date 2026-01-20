@@ -199,6 +199,12 @@ def get_ticket_html(registration, event):
 		# Remove Quill editor wrapper divs
 		desc = re.sub(r'<div class="ql-editor[^"]*"[^>]*>', "", desc)
 		desc = re.sub(r"</div>\s*$", "", desc)
+
+		# Convert relative image URLs to absolute URLs for PDF rendering
+		site_url = frappe.utils.get_url()
+		desc = re.sub(r'src="(/files/[^"]+)"', f'src="{site_url}\\1"', desc)
+		desc = re.sub(r"src='(/files/[^']+)'", f"src='{site_url}\\1'", desc)
+
 		# Keep the cleaned HTML for rendering
 		event_description = desc.strip()
 

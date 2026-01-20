@@ -612,7 +612,37 @@
 			document.getElementById('form-section').style.display = 'none';
 			document.getElementById('success-section').style.display = 'block';
 			document.getElementById('reg-id').textContent = data.registration_id;
-			document.getElementById('download-btn').href = '/api/method/event_ticket.api.download_tickets?registration_id=' + data.registration_id;
+
+			const downloadBtn = document.getElementById('download-btn');
+			downloadBtn.dataset.registrationId = data.registration_id;
+			downloadBtn.addEventListener('click', function(e) {
+				e.preventDefault();
+				const regId = this.dataset.registrationId;
+				const originalText = this.textContent;
+				this.textContent = 'Downloading...';
+				this.style.pointerEvents = 'none';
+
+				fetch('/api/method/event_ticket.api.download_tickets?registration_id=' + regId)
+					.then(response => response.blob())
+					.then(blob => {
+						const url = window.URL.createObjectURL(blob);
+						const a = document.createElement('a');
+						a.href = url;
+						a.download = 'tickets_' + regId + '.pdf';
+						document.body.appendChild(a);
+						a.click();
+						window.URL.revokeObjectURL(url);
+						a.remove();
+						this.textContent = originalText;
+						this.style.pointerEvents = 'auto';
+					})
+					.catch(err => {
+						console.error('Download failed:', err);
+						alert('Download failed. Please try again.');
+						this.textContent = originalText;
+						this.style.pointerEvents = 'auto';
+					});
+			});
 
 			const container = document.getElementById('tickets-container');
 			container.innerHTML = '';
