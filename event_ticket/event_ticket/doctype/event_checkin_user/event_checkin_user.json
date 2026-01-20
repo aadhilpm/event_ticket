@@ -1,0 +1,103 @@
+{
+ "actions": [],
+ "autoname": "field:operator_email",
+ "creation": "2024-01-20 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "operator_name",
+  "operator_email",
+  "pin",
+  "column_break_1",
+  "is_active",
+  "api_key",
+  "api_secret",
+  "events_section",
+  "allowed_events"
+ ],
+ "fields": [
+  {
+   "fieldname": "operator_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Operator Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "operator_email",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Email",
+   "options": "Email",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "description": "4-6 digit PIN for quick login in the app",
+   "fieldname": "pin",
+   "fieldtype": "Password",
+   "label": "PIN",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Is Active"
+  },
+  {
+   "fieldname": "api_key",
+   "fieldtype": "Data",
+   "label": "API Key",
+   "read_only": 1
+  },
+  {
+   "fieldname": "api_secret",
+   "fieldtype": "Password",
+   "label": "API Secret",
+   "read_only": 1
+  },
+  {
+   "fieldname": "events_section",
+   "fieldtype": "Section Break",
+   "label": "Allowed Events"
+  },
+  {
+   "fieldname": "allowed_events",
+   "fieldtype": "Table MultiSelect",
+   "label": "Allowed Events",
+   "options": "Event Checkin User Event"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-01-20 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Event Ticket",
+ "name": "Event Checkin User",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

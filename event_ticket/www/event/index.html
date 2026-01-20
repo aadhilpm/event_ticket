@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{{ event.event_name if event else 'Event Registration' }}</title>
+	<style>
+		:root {
+			--theme-color: {{ theme_color or '#0066cc' }};
+			--theme-hover: color-mix(in srgb, var(--theme-color) 85%, black);
+		}
+
+		* { margin: 0; padding: 0; box-sizing: border-box; }
+
+		body {
+			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+			background: #fafafa;
+			color: #222;
+			line-height: 1.6;
+		}
+
+		a { color: var(--theme-color); text-decoration: none; }
+		a:hover { text-decoration: underline; }
+
+		.header {
+			background: #fff;
+			border-bottom: 1px solid #e5e5e5;
+			padding: 1rem 0;
+		}
+
+		.header-inner {
+			max-width: 720px;
+			margin: 0 auto;
+			padding: 0 1.5rem;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+
+		.logo {
+			font-weight: 600;
+			font-size: 1.1rem;
+			color: #222;
+		}
+
+		.nav a {
+			color: #666;
+			margin-left: 1.5rem;
+			font-size: 0.9rem;
+		}
+
+		.container {
+			max-width: 720px;
+			margin: 0 auto;
+			padding: 2rem 1.5rem 4rem;
+		}
+
+		.event-header {
+			margin-bottom: 2rem;
+		}
+
+		.event-header h1 {
+			font-size: 1.75rem;
+			font-weight: 600;
+			margin-bottom: 0.75rem;
+			color: #111;
+		}
+
+		.event-meta {
+			color: #666;
+			font-size: 0.95rem;
+		}
+
+		.event-meta span {
+			margin-right: 1.5rem;
+		}
+
+		.card {
+			background: #fff;
+			border: 1px solid #e5e5e5;
+			border-radius: 8px;
+			margin-bottom: 1.5rem;
+		}
+
+		.card-header {
+			padding: 1rem 1.5rem;
+			border-bottom: 1px solid #e5e5e5;
+			font-weight: 600;
+			font-size: 0.9rem;
+			color: #444;
+		}
+
+		.card-body {
+			padding: 1.5rem;
+		}
+
+		.form-group {
+			margin-bottom: 1.25rem;
+		}
+
+		.form-label {
+			display: block;
+			font-size: 0.875rem;
+			font-weight: 500;
+			margin-bottom: 0.5rem;
+			color: #333;
+		}
+
+		.form-label .required {
+			color: #dc3545;
+		}
+
+		.form-input {
+			width: 100%;
+			padding: 0.625rem 0.875rem;
+			font-size: 0.95rem;
+			border: 1px solid #d1d5db;
+			border-radius: 6px;
+			background: #fff;
+			transition: border-color 0.15s;
+		}
+
+		.form-input:focus {
+			outline: none;
+			border-color: var(--theme-color);
+		}
+
+		.form-row {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 1rem;
+		}
+
+		@media (max-width: 600px) {
+			.form-row { grid-template-columns: 1fr; }
+		}
+
+		.attendee-block {
+			background: #f9f9f9;
+			border: 1px solid #eee;
+			border-radius: 6px;
+			padding: 1.25rem;
+			margin-bottom: 1rem;
+		}
+
+		.attendee-header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 1rem;
+		}
+
+		.attendee-label {
+			font-weight: 500;
+			font-size: 0.9rem;
+			color: #555;
+		}
+
+		.btn-remove {
+			background: none;
+			border: none;
+			color: #999;
+			cursor: pointer;
+			font-size: 0.85rem;
+		}
+
+		.btn-remove:hover { color: #dc3545; }
+
+		.btn-add {
+			width: 100%;
+			padding: 0.75rem;
+			background: #fff;
+			border: 1px dashed #ccc;
+			border-radius: 6px;
+			color: #666;
+			cursor: pointer;
+			font-size: 0.9rem;
+			margin-bottom: 1.5rem;
+		}
+
+		.btn-add:hover {
+			border-color: #999;
+			color: #333;
+		}
+
+		.btn-submit {
+			width: 100%;
+			padding: 0.875rem 1.5rem;
+			background: var(--theme-color);
+			color: #fff;
+			border: none;
+			border-radius: 6px;
+			font-size: 1rem;
+			font-weight: 500;
+			cursor: pointer;
+		}
+
+		.btn-submit:hover { background: var(--theme-hover); }
+		.btn-submit:disabled { background: #ccc; cursor: not-allowed; }
+
+		.alert {
+			padding: 1rem 1.25rem;
+			border-radius: 6px;
+			margin-bottom: 1.5rem;
+			font-size: 0.95rem;
+		}
+
+		.alert-warning {
+			background: #fff8e6;
+			border: 1px solid #ffe08a;
+			color: #946c00;
+		}
+
+		.success-section {
+			text-align: center;
+			padding: 2rem 0;
+		}
+
+		.success-icon {
+			width: 64px;
+			height: 64px;
+			background: #22c55e;
+			border-radius: 50%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			margin: 0 auto 1.25rem;
+		}
+
+		.success-icon svg {
+			width: 32px;
+			height: 32px;
+			stroke: #fff;
+		}
+
+		.success-section h2 {
+			font-size: 1.5rem;
+			margin-bottom: 0.5rem;
+		}
+
+		.success-section p {
+			color: #666;
+			margin-bottom: 1.5rem;
+		}
+
+		.reg-code {
+			display: inline-block;
+			background: #f0f9f0;
+			border: 1px solid #c8e6c9;
+			padding: 0.5rem 1rem;
+			border-radius: 6px;
+			font-weight: 600;
+			color: #2e7d32;
+			margin-bottom: 2rem;
+		}
+
+		.ticket-card {
+			background: #fff;
+			border: 1px solid #e5e5e5;
+			border-radius: 8px;
+			margin: 1rem 0;
+			text-align: left;
+			overflow: hidden;
+		}
+
+		.ticket-top {
+			background: #333;
+			color: #fff;
+			padding: 0.875rem 1.25rem;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+
+		.ticket-top h4 { margin: 0; font-size: 1rem; font-weight: 500; }
+		.ticket-seq { font-size: 0.85rem; opacity: 0.8; }
+
+		.ticket-body {
+			padding: 1.25rem;
+			display: flex;
+			gap: 1.25rem;
+			align-items: flex-start;
+		}
+
+		.ticket-qr {
+			flex-shrink: 0;
+			background: #f5f5f5;
+			padding: 0.5rem;
+			border-radius: 6px;
+		}
+
+		.ticket-qr img {
+			display: block;
+			width: 100px;
+			height: 100px;
+		}
+
+		.ticket-info p {
+			margin: 0.25rem 0;
+			font-size: 0.9rem;
+			color: #555;
+		}
+
+		.ticket-info .ticket-num {
+			font-family: monospace;
+			font-weight: 600;
+			color: var(--theme-color);
+		}
+
+		.action-buttons {
+			display: flex;
+			gap: 1rem;
+			justify-content: center;
+			margin-top: 2rem;
+			flex-wrap: wrap;
+		}
+
+		.btn-action {
+			padding: 0.75rem 1.5rem;
+			border-radius: 6px;
+			font-size: 0.9rem;
+			font-weight: 500;
+			text-decoration: none;
+			display: inline-block;
+		}
+
+		.btn-primary {
+			background: var(--theme-color);
+			color: #fff;
+		}
+
+		.btn-primary:hover { background: var(--theme-hover); text-decoration: none; }
+
+		.btn-outline {
+			background: #fff;
+			color: #333;
+			border: 1px solid #ddd;
+		}
+
+		.btn-outline:hover { border-color: #999; text-decoration: none; }
+
+		.not-found {
+			text-align: center;
+			padding: 4rem 2rem;
+		}
+
+		.not-found h2 {
+			font-size: 1.5rem;
+			margin-bottom: 0.5rem;
+		}
+
+		.not-found p {
+			color: #666;
+			margin-bottom: 1.5rem;
+		}
+
+		.description-section {
+			margin-top: 1.5rem;
+		}
+
+		.description-section h3 {
+			font-size: 1rem;
+			font-weight: 600;
+			margin-bottom: 0.75rem;
+			color: #333;
+		}
+
+		.description-section p {
+			color: #555;
+			font-size: 0.95rem;
+		}
+
+		@media (max-width: 600px) {
+			.ticket-body {
+				flex-direction: column;
+				align-items: center;
+				text-align: center;
+			}
+			.action-buttons {
+				flex-direction: column;
+			}
+			.btn-action {
+				width: 100%;
+				text-align: center;
+			}
+		}
+	</style>
+</head>
+<body>
+	<header class="header">
+		<div class="header-inner">
+			<a href="/" class="logo">Event Tickets</a>
+			<nav class="nav">
+				<a href="/">Home</a>
+				<a href="/events">Events</a>
+			</nav>
+		</div>
+	</header>
+
+	<main class="container">
+		{% if not event %}
+		<div class="card">
+			<div class="not-found">
+				<h2>Event Not Found</h2>
+				<p>This event doesn't exist or is no longer available.</p>
+				<a href="/events" class="btn-action btn-primary">Browse Events</a>
+			</div>
+		</div>
+		{% else %}
+
+		<div class="event-header">
+			<h1>{{ event.event_name }}</h1>
+			<div class="event-meta">
+				{% if start_date_formatted %}<span>{{ start_date_formatted }}</span>{% endif %}
+				{% if event.venue %}<span>{{ event.venue }}</span>{% endif %}
+			</div>
+		</div>
+
+		{% if registration_allowed %}
+		<div id="form-section">
+			<form id="registration-form">
+				<input type="hidden" name="event" value="{{ event.name }}">
+
+				<div class="card">
+					<div class="card-header">Contact Information</div>
+					<div class="card-body">
+						<div class="form-row">
+							<div class="form-group">
+								<label class="form-label">Full Name <span class="required">*</span></label>
+								<input type="text" class="form-input" name="contact_person" id="contact_person" required>
+							</div>
+							<div class="form-group">
+								<label class="form-label">Email <span class="required">*</span></label>
+								<input type="email" class="form-input" name="email" required>
+							</div>
+						</div>
+						<div class="form-group" style="max-width: 50%;">
+							<label class="form-label">Mobile <span class="required">*</span></label>
+							<input type="tel" class="form-input" name="mobile" id="mobile" required>
+						</div>
+					</div>
+				</div>
+
+				<div class="card">
+					<div class="card-header">Attendees</div>
+					<div class="card-body">
+						<div id="attendees-container"></div>
+						<button type="button" class="btn-add" id="add-attendee">+ Add Another Attendee</button>
+						<button type="submit" class="btn-submit" id="submit-btn">Complete Registration</button>
+					</div>
+				</div>
+			</form>
+		</div>
+
+		<div class="success-section" id="success-section" style="display: none;">
+			<div class="success-icon">
+				<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+				</svg>
+			</div>
+			<h2>Registration Complete</h2>
+			<p>Your tickets have been confirmed. A confirmation email has been sent.</p>
+			<div class="reg-code" id="reg-id"></div>
+			<div id="tickets-container"></div>
+			<div class="action-buttons">
+				<a href="#" class="btn-action btn-primary" id="download-btn">Download PDF</a>
+				<a href="/event/{{ event.event_code }}" class="btn-action btn-outline">Register More</a>
+			</div>
+		</div>
+
+		{% else %}
+		<div class="alert alert-warning">
+			{{ error_message or "Registration is closed for this event." }}
+		</div>
+		{% endif %}
+
+		{% if event.description %}
+		<div class="description-section">
+			<h3>About This Event</h3>
+			<p>{{ event.description }}</p>
+		</div>
+		{% endif %}
+
+		{% endif %}
+	</main>
+
+	<template id="attendee-template">
+		<div class="attendee-block">
+			<div class="attendee-header">
+				<span class="attendee-label">Attendee <span class="num">1</span></span>
+				<button type="button" class="btn-remove" style="display: none;">Remove</button>
+			</div>
+			<div class="form-row">
+				<div class="form-group">
+					<label class="form-label">Name <span class="required">*</span></label>
+					<input type="text" class="form-input" name="attendee_name[]" required>
+				</div>
+				<div class="form-group">
+					<label class="form-label">Gender <span class="required">*</span></label>
+					<select class="form-input" name="attendee_gender[]" required>
+						<option value="">Select</option>
+						<option value="Male">Male</option>
+						<option value="Female">Female</option>
+					</select>
+				</div>
+			</div>
+			<div class="dynamic-fields"></div>
+		</div>
+	</template>
+
+	<template id="ticket-template">
+		<div class="ticket-card">
+			<div class="ticket-top">
+				<h4 class="attendee-name"></h4>
+				<span class="ticket-seq"></span>
+			</div>
+			<div class="ticket-body">
+				<div class="ticket-qr">
+					<img src="" alt="QR" class="qr-img">
+				</div>
+				<div class="ticket-info">
+					<p><strong>Ticket:</strong> <span class="ticket-num"></span></p>
+					<p><strong>Sequence:</strong> <span class="seq-num"></span></p>
+					<p style="color: #888; font-size: 0.85rem; margin-top: 0.5rem;">Present this QR at the venue</p>
+				</div>
+			</div>
+		</div>
+	</template>
+
+	<script id="fields-data" type="application/json">{{ registration_fields | tojson }}</script>
+
+	<script>
+	document.addEventListener('DOMContentLoaded', function() {
+		const fields = JSON.parse(document.getElementById('fields-data')?.textContent || '[]');
+		let count = 0;
+
+		function getFieldsHtml() {
+			let html = '';
+			fields.forEach(f => {
+				const req = f.is_mandatory ? 'required' : '';
+				const star = f.is_mandatory ? '<span class="required">*</span>' : '';
+				let input = '';
+
+				if (f.field_type === 'Data') {
+					input = `<input type="text" class="form-input" name="${f.field_key}[]" ${req}>`;
+				} else if (f.field_type === 'Select') {
+					const opts = (f.options || '').split('\n').filter(o => o);
+					input = `<select class="form-input" name="${f.field_key}[]" ${req}>
+						<option value="">Select</option>
+						${opts.map(o => `<option value="${o}">${o}</option>`).join('')}
+					</select>`;
+				} else if (f.field_type === 'Check') {
+					input = `<label style="display:flex;align-items:center;gap:0.5rem;margin-top:1.5rem;">
+						<input type="checkbox" name="${f.field_key}[]" value="1">
+						<span>${f.field_label}</span>
+					</label>`;
+				}
+
+				if (f.field_type !== 'Check') {
+					html += `<div class="form-group" style="grid-column: span 1;">
+						<label class="form-label">${f.field_label} ${star}</label>${input}
+					</div>`;
+				} else {
+					html += `<div style="grid-column: span 2;">${input}</div>`;
+				}
+			});
+			return html ? `<div class="form-row" style="margin-top:0.5rem;">${html}</div>` : '';
+		}
+
+		function addAttendee() {
+			count++;
+			const tpl = document.getElementById('attendee-template');
+			const clone = tpl.content.cloneNode(true);
+			clone.querySelector('.num').textContent = count;
+			const dynamicHtml = getFieldsHtml();
+			if (dynamicHtml) clone.querySelector('.dynamic-fields').innerHTML = dynamicHtml;
+			if (count > 1) clone.querySelector('.btn-remove').style.display = 'block';
+
+			// For first attendee, pre-fill with contact person name
+			if (count === 1) {
+				const nameInput = clone.querySelector('input[name="attendee_name[]"]');
+				const contactName = document.getElementById('contact_person').value;
+				if (contactName) nameInput.value = contactName;
+
+				// Also update when contact person changes (if first attendee name matches or is empty)
+				document.getElementById('contact_person').addEventListener('input', function() {
+					const firstAttendee = document.querySelector('.attendee-block input[name="attendee_name[]"]');
+					if (firstAttendee && (firstAttendee.value === '' || firstAttendee.dataset.autoFilled === 'true')) {
+						firstAttendee.value = this.value;
+						firstAttendee.dataset.autoFilled = 'true';
+					}
+				});
+				nameInput.dataset.autoFilled = 'true';
+				nameInput.addEventListener('input', function() {
+					this.dataset.autoFilled = 'false';
+				});
+			}
+
+			document.getElementById('attendees-container').appendChild(clone);
+			updateBtns();
+		}
+
+		function updateBtns() {
+			const items = document.querySelectorAll('.attendee-block');
+			items.forEach((el, i) => {
+				el.querySelector('.num').textContent = i + 1;
+				el.querySelector('.btn-remove').style.display = items.length > 1 ? 'block' : 'none';
+			});
+		}
+
+		function showSuccess(data) {
+			document.getElementById('form-section').style.display = 'none';
+			document.getElementById('success-section').style.display = 'block';
+			document.getElementById('reg-id').textContent = data.registration_id;
+			document.getElementById('download-btn').href = '/api/method/event_ticket.api.download_tickets?registration_id=' + data.registration_id;
+
+			const container = document.getElementById('tickets-container');
+			container.innerHTML = '';
+
+			data.attendees.forEach(a => {
+				const tpl = document.getElementById('ticket-template');
+				const clone = tpl.content.cloneNode(true);
+				clone.querySelector('.attendee-name').textContent = a.attendee_name;
+				clone.querySelector('.ticket-seq').textContent = a.sequence_number;
+				clone.querySelector('.ticket-num').textContent = a.ticket_number;
+				clone.querySelector('.seq-num').textContent = a.sequence_number;
+
+				const qrImg = clone.querySelector('.qr-img');
+				if (a.qr_image && a.qr_image.startsWith('data:image')) {
+					qrImg.src = a.qr_image;
+				} else {
+					qrImg.parentNode.innerHTML = '<div style="width:100px;height:100px;background:#eee;display:flex;align-items:center;justify-content:center;color:#999;font-size:0.75rem;text-align:center;border-radius:4px;">QR in PDF</div>';
+				}
+				container.appendChild(clone);
+			});
+
+			window.scrollTo({ top: 0, behavior: 'smooth' });
+		}
+
+		addAttendee();
+
+		document.getElementById('add-attendee')?.addEventListener('click', addAttendee);
+
+		document.getElementById('attendees-container')?.addEventListener('click', e => {
+			if (e.target.closest('.btn-remove')) {
+				e.target.closest('.attendee-block').remove();
+				count--;
+				updateBtns();
+			}
+		});
+
+		document.getElementById('registration-form')?.addEventListener('submit', function(e) {
+			e.preventDefault();
+			const btn = document.getElementById('submit-btn');
+			btn.disabled = true;
+			btn.textContent = 'Processing...';
+
+			const fd = new FormData(this);
+			const attendees = [];
+			const names = fd.getAll('attendee_name[]');
+			const genders = fd.getAll('attendee_gender[]');
+
+			names.forEach((name, i) => {
+				const att = { attendee_name: name, gender: genders[i], additional_fields: {} };
+				fields.forEach(f => {
+					const vals = fd.getAll(`${f.field_key}[]`);
+					att.additional_fields[f.field_key] = f.field_type === 'Check' ? (vals[i] === '1' ? 1 : 0) : (vals[i] || '');
+				});
+				attendees.push(att);
+			});
+
+			// Build form data for Frappe API
+			const postData = new FormData();
+			postData.append('event', fd.get('event'));
+			postData.append('contact_person', fd.get('contact_person'));
+			postData.append('email', fd.get('email'));
+			postData.append('mobile', fd.get('mobile') || '');
+			postData.append('attendees', JSON.stringify(attendees));
+
+			fetch('/api/method/event_ticket.api.register', {
+				method: 'POST',
+				credentials: 'include',
+				body: postData
+			})
+			.then(r => r.json())
+			.then(r => {
+				if (r.message?.success) {
+					showSuccess(r.message);
+				} else if (r.exc) {
+					// Server exception
+					console.error('Server error:', r.exc);
+					alert('Server error. Please try again.');
+					btn.disabled = false;
+					btn.textContent = 'Complete Registration';
+				} else {
+					alert(r.message?.error || 'Registration failed. Please try again.');
+					btn.disabled = false;
+					btn.textContent = 'Complete Registration';
+				}
+			})
+			.catch(err => {
+				console.error('Network error:', err);
+				alert('Network error. Please check your connection and try again.');
+				btn.disabled = false;
+				btn.textContent = 'Complete Registration';
+			});
+		});
+	});
+	</script>
+</body>
+</html>

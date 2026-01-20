@@ -10,6 +10,12 @@ app_license = "mit"
 
 # required_apps = []
 
+# Website Route Rules
+# -------------------
+website_route_rules = [
+	{"from_route": "/event/<event_code>", "to_route": "event"},
+]
+
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
 # 	{
@@ -249,4 +255,3 @@ app_license = "mit"
 # ------------
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
-

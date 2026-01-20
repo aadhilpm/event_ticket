@@ -1,0 +1,261 @@
+{
+ "actions": [],
+ "autoname": "field:event_code",
+ "creation": "2024-01-20 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "event_details_section",
+  "event_name",
+  "event_code",
+  "status",
+  "column_break_1",
+  "start_date",
+  "end_date",
+  "venue",
+  "description_section",
+  "description",
+  "banner_image",
+  "theme_color",
+  "registration_section",
+  "registration_open",
+  "max_capacity",
+  "column_break_reg",
+  "registration_start_date",
+  "registration_end_date",
+  "email_section",
+  "email_subject",
+  "email_body",
+  "dynamic_fields_section",
+  "registration_fields",
+  "payment_section",
+  "is_paid_event",
+  "ticket_price",
+  "counters_section",
+  "sequence_start",
+  "column_break_counters",
+  "male_sequence",
+  "female_sequence",
+  "total_registrations"
+ ],
+ "fields": [
+  {
+   "fieldname": "event_details_section",
+   "fieldtype": "Section Break",
+   "label": "Event Details"
+  },
+  {
+   "fieldname": "event_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Event Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "event_code",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Event Code",
+   "read_only": 1,
+   "unique": 1
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Draft\nPublished\nClosed\nCompleted"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "start_date",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Start Date"
+  },
+  {
+   "fieldname": "end_date",
+   "fieldtype": "Datetime",
+   "label": "End Date"
+  },
+  {
+   "fieldname": "venue",
+   "fieldtype": "Data",
+   "label": "Venue"
+  },
+  {
+   "fieldname": "description_section",
+   "fieldtype": "Section Break",
+   "label": "Description"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text Editor",
+   "label": "Description"
+  },
+  {
+   "fieldname": "banner_image",
+   "fieldtype": "Attach Image",
+   "label": "Banner Image"
+  },
+  {
+   "default": "#0066cc",
+   "description": "Theme color for buttons and accents on registration page and PDF tickets",
+   "fieldname": "theme_color",
+   "fieldtype": "Color",
+   "label": "Theme Color"
+  },
+  {
+   "fieldname": "registration_section",
+   "fieldtype": "Section Break",
+   "label": "Registration Settings"
+  },
+  {
+   "default": "0",
+   "fieldname": "registration_open",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Registration Open"
+  },
+  {
+   "default": "0",
+   "description": "0 = Unlimited",
+   "fieldname": "max_capacity",
+   "fieldtype": "Int",
+   "label": "Max Capacity"
+  },
+  {
+   "fieldname": "column_break_reg",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "registration_start_date",
+   "fieldtype": "Datetime",
+   "label": "Registration Start Date"
+  },
+  {
+   "fieldname": "registration_end_date",
+   "fieldtype": "Datetime",
+   "label": "Registration End Date"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "email_section",
+   "fieldtype": "Section Break",
+   "label": "Email Configuration"
+  },
+  {
+   "default": "Your Registration for {{event_name}} is Confirmed",
+   "fieldname": "email_subject",
+   "fieldtype": "Data",
+   "label": "Email Subject"
+  },
+  {
+   "default": "<p>Dear {{contact_person}},</p>\n<p>Thank you for registering for <strong>{{event_name}}</strong>.</p>\n<p><strong>Event Details:</strong></p>\n<ul>\n<li>Date: {{event_date}}</li>\n<li>Venue: {{venue}}</li>\n</ul>\n<p><strong>Your Tickets:</strong></p>\n{{tickets_html}}\n<p>Please keep this email for your reference.</p>",
+   "fieldname": "email_body",
+   "fieldtype": "HTML Editor",
+   "label": "Email Body"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "dynamic_fields_section",
+   "fieldtype": "Section Break",
+   "label": "Additional Registration Fields"
+  },
+  {
+   "fieldname": "registration_fields",
+   "fieldtype": "Table",
+   "label": "Registration Fields",
+   "options": "Event Registration Field"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "payment_section",
+   "fieldtype": "Section Break",
+   "label": "Payment Settings (Future)"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_paid_event",
+   "fieldtype": "Check",
+   "label": "Is Paid Event"
+  },
+  {
+   "depends_on": "is_paid_event",
+   "fieldname": "ticket_price",
+   "fieldtype": "Currency",
+   "label": "Ticket Price"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "counters_section",
+   "fieldtype": "Section Break",
+   "label": "Sequence Settings"
+  },
+  {
+   "default": "100",
+   "description": "Sequence numbers will start from this value (e.g., 100 means M-0100, F-0100)",
+   "fieldname": "sequence_start",
+   "fieldtype": "Int",
+   "label": "Sequence Start Number"
+  },
+  {
+   "fieldname": "column_break_counters",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "male_sequence",
+   "fieldtype": "Int",
+   "label": "Male Sequence Counter",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "female_sequence",
+   "fieldtype": "Int",
+   "label": "Female Sequence Counter",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "total_registrations",
+   "fieldtype": "Int",
+   "label": "Total Registrations",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-01-20 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Event Ticket",
+ "name": "Ticket Event",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "event_name",
+ "track_changes": 1
+}
