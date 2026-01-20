@@ -3,6 +3,7 @@
 
 import base64
 import json
+from io import BytesIO
 
 import frappe
 from frappe import _
@@ -49,13 +50,8 @@ class EventCheckinUser(Document):
 
 	@frappe.whitelist()
 	def generate_login_qr_code(self):
-		"""Generate QR code for app login"""
-		try:
-			from io import BytesIO
-
-			import qrcode
-		except ImportError:
-			frappe.throw(_("qrcode library is not installed. Please run: pip install qrcode[pil]"))
+		"""Generate QR code for app login using Frappe's pyqrcode"""
+		from pyqrcode import create as qrcreate
 
 		# Get site URL
 		site_url = frappe.utils.get_url()
@@ -75,21 +71,12 @@ class EventCheckinUser(Document):
 		json_str = json.dumps(qr_data)
 		encoded_data = base64.b64encode(json_str.encode()).decode()
 
-		# Generate QR code
-		qr = qrcode.QRCode(
-			version=1,
-			error_correction=qrcode.constants.ERROR_CORRECT_L,
-			box_size=10,
-			border=4,
-		)
-		qr.add_data(encoded_data)
-		qr.make(fit=True)
+		# Generate QR code using pyqrcode (Frappe's dependency)
+		qr = qrcreate(encoded_data, error="L")
 
-		img = qr.make_image(fill_color="black", back_color="white")
-
-		# Save to BytesIO
+		# Save to BytesIO as PNG
 		buffer = BytesIO()
-		img.save(buffer, format="PNG")
+		qr.png(buffer, scale=8, module_color=[0, 0, 0], background=[255, 255, 255])
 		buffer.seek(0)
 
 		# Save as file
