@@ -1,6 +1,8 @@
 # Copyright (c) 2024, Aadhil and contributors
 # For license information, please see license.txt
 
+import re
+
 import frappe
 from frappe.utils import format_datetime
 
@@ -42,6 +44,10 @@ def get_context(context):
 				"is_mandatory": field.is_mandatory,
 			}
 		)
+
+	# Check if description has actual content (not just empty HTML tags)
+	description_text = re.sub(r"<[^>]+>", "", event.description or "").strip()
+	context.has_description = bool(description_text)
 
 	context.title = event.event_name
 	context.theme_color = event.theme_color or "#0066cc"

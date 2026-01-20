@@ -474,10 +474,10 @@
 		</div>
 		{% endif %}
 
-		{% if event.description %}
+		{% if has_description %}
 		<div class="description-section">
 			<h3>About This Event</h3>
-			<p>{{ event.description }}</p>
+			<div>{{ event.description }}</div>
 		</div>
 		{% endif %}
 
