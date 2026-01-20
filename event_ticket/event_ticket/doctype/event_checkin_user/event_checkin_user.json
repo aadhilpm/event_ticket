@@ -12,6 +12,9 @@
   "is_active",
   "api_key",
   "api_secret",
+  "qr_section",
+  "login_qr_code",
+  "generate_qr_button",
   "events_section",
   "allowed_events"
  ],
@@ -63,6 +66,23 @@
    "read_only": 1
   },
   {
+   "fieldname": "qr_section",
+   "fieldtype": "Section Break",
+   "label": "App Login QR Code"
+  },
+  {
+   "description": "Scan this QR code in the Event Check-in app to login automatically",
+   "fieldname": "login_qr_code",
+   "fieldtype": "Attach Image",
+   "label": "Login QR Code",
+   "read_only": 1
+  },
+  {
+   "fieldname": "generate_qr_button",
+   "fieldtype": "Button",
+   "label": "Generate Login QR Code"
+  },
+  {
    "fieldname": "events_section",
    "fieldtype": "Section Break",
    "label": "Allowed Events"
@@ -76,7 +96,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-01-20 10:00:00.000000",
+ "modified": "2024-01-21 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Event Ticket",
  "name": "Event Checkin User",

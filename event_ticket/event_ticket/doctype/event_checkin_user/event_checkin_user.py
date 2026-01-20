@@ -1,6 +1,9 @@
 # Copyright (c) 2024, Aadhil and contributors
 # For license information, please see license.txt
 
+import base64
+import json
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -43,3 +46,83 @@ class EventCheckinUser(Document):
 
 		allowed_event_codes = [e.event for e in self.allowed_events]
 		return event_code in allowed_event_codes
+
+	@frappe.whitelist()
+	def generate_login_qr_code(self):
+		"""Generate QR code for app login"""
+		try:
+			from io import BytesIO
+
+			import qrcode
+		except ImportError:
+			frappe.throw(_("qrcode library is not installed. Please run: pip install qrcode[pil]"))
+
+		# Get site URL
+		site_url = frappe.utils.get_url()
+
+		# Get PIN (decrypted)
+		pin = self.get_password("pin")
+
+		# Create QR data as JSON
+		qr_data = {
+			"url": site_url,
+			"email": self.operator_email,
+			"pin": pin,
+			"v": "1",  # version for future compatibility
+		}
+
+		# Encode as base64
+		json_str = json.dumps(qr_data)
+		encoded_data = base64.b64encode(json_str.encode()).decode()
+
+		# Generate QR code
+		qr = qrcode.QRCode(
+			version=1,
+			error_correction=qrcode.constants.ERROR_CORRECT_L,
+			box_size=10,
+			border=4,
+		)
+		qr.add_data(encoded_data)
+		qr.make(fit=True)
+
+		img = qr.make_image(fill_color="black", back_color="white")
+
+		# Save to BytesIO
+		buffer = BytesIO()
+		img.save(buffer, format="PNG")
+		buffer.seek(0)
+
+		# Save as file
+		file_name = f"login_qr_{self.operator_email.replace('@', '_').replace('.', '_')}.png"
+
+		# Delete old QR code file if exists
+		if self.login_qr_code:
+			old_file = frappe.db.get_value("File", {"file_url": self.login_qr_code}, "name")
+			if old_file:
+				frappe.delete_doc("File", old_file, ignore_permissions=True)
+
+		# Create new file
+		file_doc = frappe.get_doc(
+			{
+				"doctype": "File",
+				"file_name": file_name,
+				"attached_to_doctype": self.doctype,
+				"attached_to_name": self.name,
+				"attached_to_field": "login_qr_code",
+				"content": buffer.getvalue(),
+				"is_private": 1,
+			}
+		)
+		file_doc.save(ignore_permissions=True)
+
+		# Update the field
+		self.login_qr_code = file_doc.file_url
+		self.save(ignore_permissions=True)
+
+		frappe.msgprint(
+			_(
+				"Login QR Code generated successfully. You can now scan this QR code in the Event Check-in app."
+			)
+		)
+
+		return {"file_url": file_doc.file_url}
