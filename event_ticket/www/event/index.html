@@ -680,6 +680,9 @@
 			fetch('/api/method/event_ticket.api.register', {
 				method: 'POST',
 				credentials: 'include',
+				headers: {
+					'X-Frappe-CSRF-Token': window.frappe?.csrf_token || ''
+				},
 				body: postData
 			})
 			.then(r => r.json())
