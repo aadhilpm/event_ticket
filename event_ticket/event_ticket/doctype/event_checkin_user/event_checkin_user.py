@@ -72,7 +72,7 @@ class EventCheckinUser(Document):
 		json_str = json.dumps(qr_data)
 		encoded_data = base64.b64encode(json_str.encode()).decode()
 
-		# Generate QR code using qrcode library (works with PIL/Pillow)
+		# Generate QR code using qrcode library with PIL
 		qr = qrcode.QRCode(
 			version=1,
 			error_correction=qrcode.constants.ERROR_CORRECT_L,
@@ -85,7 +85,7 @@ class EventCheckinUser(Document):
 		# Create PNG image
 		img = qr.make_image(fill_color="black", back_color="white")
 
-		# Save to BytesIO
+		# Save to BytesIO as PNG
 		buffer = BytesIO()
 		img.save(buffer, format="PNG")
 		buffer.seek(0)
