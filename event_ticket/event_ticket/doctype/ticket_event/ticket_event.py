@@ -1,6 +1,8 @@
 # Copyright (c) 2024, Aadhil and contributors
 # For license information, please see license.txt
 
+import json
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -106,3 +108,130 @@ class TicketEvent(Document):
 				return False, _("Event is fully booked")
 
 		return True, None
+
+	def create_public_registration(self, contact_person, email, mobile, attendees):
+		"""
+		Create a registration from public API
+
+		Args:
+			contact_person: Name of contact person
+			email: Contact email
+			mobile: Contact mobile
+			attendees: List of attendee dictionaries
+
+		Returns:
+			dict: Registration result with success status
+		"""
+		import json
+
+		from event_ticket.utils import generate_qr_image
+
+		# Check if registration is allowed
+		is_allowed, error_message = self.is_registration_allowed()
+		if not is_allowed:
+			return {"success": False, "error": error_message}
+
+		if not attendees or len(attendees) == 0:
+			return {"success": False, "error": _("At least one attendee is required")}
+
+		# Check capacity
+		if self.max_capacity and self.max_capacity > 0:
+			current_count = self.get_registration_count()
+			if current_count + len(attendees) > self.max_capacity:
+				return {"success": False, "error": _("Not enough seats available")}
+
+		# Create registration
+		registration = frappe.get_doc(
+			{
+				"doctype": "Event Registration",
+				"event": self.name,
+				"contact_person": contact_person,
+				"email": email,
+				"mobile": mobile,
+				"attendees": [],
+			}
+		)
+
+		# Add attendees
+		for attendee in attendees:
+			additional_fields = attendee.get("additional_fields", {})
+			if isinstance(additional_fields, str):
+				additional_fields = json.loads(additional_fields)
+
+			registration.append(
+				"attendees",
+				{
+					"attendee_name": attendee.get("attendee_name"),
+					"gender": attendee.get("gender"),
+					"additional_fields": json.dumps(additional_fields) if additional_fields else None,
+				},
+			)
+
+		registration.insert(ignore_permissions=True)
+
+		# Reload to get generated ticket data
+		registration.reload()
+
+		# Build attendee response with QR images
+		attendees_data = []
+		for attendee in registration.attendees:
+			qr_image = generate_qr_image(attendee.qr_code)
+			attendees_data.append(
+				{
+					"attendee_name": attendee.attendee_name,
+					"ticket_number": attendee.ticket_number,
+					"sequence_number": attendee.sequence_number,
+					"gender": attendee.gender,
+					"qr_image": qr_image,
+				}
+			)
+
+		return {
+			"success": True,
+			"registration_id": registration.name,
+			"attendees": attendees_data,
+			"message": _("Registration successful"),
+		}
+
+
+# ==========================================
+# Public API Methods (Whitelisted)
+# ==========================================
+
+
+@frappe.whitelist(allow_guest=True)
+def register(event, contact_person, email, attendees, mobile=None):
+	"""
+	Public API to register for an event
+
+	Args:
+		event: Event code/name
+		contact_person: Name of contact person
+		email: Contact email
+		mobile: Contact mobile (optional)
+		attendees: List of attendee dictionaries
+
+	Returns:
+		dict: Registration result with success status
+	"""
+	try:
+		# Validate event exists
+		if not frappe.db.exists("Ticket Event", event):
+			return {"success": False, "error": _("Event not found")}
+
+		event_doc = frappe.get_doc("Ticket Event", event)
+
+		# Parse attendees if string
+		if isinstance(attendees, str):
+			attendees = json.loads(attendees)
+
+		# Use DocType method to create registration
+		result = event_doc.create_public_registration(
+			contact_person=contact_person, email=email, mobile=mobile, attendees=attendees
+		)
+
+		return result
+
+	except Exception as e:
+		frappe.log_error(f"Registration error: {e!s}", "Event Registration API Error")
+		return {"success": False, "error": str(e)}

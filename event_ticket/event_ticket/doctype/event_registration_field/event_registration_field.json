@@ -11,7 +11,11 @@
   "options",
   "column_break_1",
   "is_mandatory",
-  "sort_order"
+  "sort_order",
+  "display_settings_section",
+  "show_on_pdf",
+  "show_on_email",
+  "show_to_checkin_user"
  ],
  "fields": [
   {
@@ -59,6 +63,29 @@
    "fieldname": "sort_order",
    "fieldtype": "Int",
    "label": "Sort Order"
+  },
+  {
+   "fieldname": "display_settings_section",
+   "fieldtype": "Section Break",
+   "label": "Display Settings"
+  },
+  {
+   "default": "1",
+   "fieldname": "show_on_pdf",
+   "fieldtype": "Check",
+   "label": "Show on Ticket PDF"
+  },
+  {
+   "default": "1",
+   "fieldname": "show_on_email",
+   "fieldtype": "Check",
+   "label": "Show on Email"
+  },
+  {
+   "default": "1",
+   "fieldname": "show_to_checkin_user",
+   "fieldtype": "Check",
+   "label": "Show to Check-in User"
   }
  ],
  "index_web_pages_for_search": 1,

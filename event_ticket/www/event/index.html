@@ -622,7 +622,7 @@
 				this.textContent = 'Downloading...';
 				this.style.pointerEvents = 'none';
 
-				fetch('/api/method/event_ticket.api.download_tickets?registration_id=' + regId)
+				fetch('/api/method/event_ticket.event_ticket.doctype.event_registration.event_registration.download_tickets?registration_id=' + regId)
 					.then(response => response.blob())
 					.then(blob => {
 						const url = window.URL.createObjectURL(blob);
@@ -707,7 +707,7 @@
 			postData.append('mobile', fd.get('mobile') || '');
 			postData.append('attendees', JSON.stringify(attendees));
 
-			fetch('/api/method/event_ticket.api.register', {
+			fetch('/api/method/event_ticket.event_ticket.doctype.ticket_event.ticket_event.register', {
 				method: 'POST',
 				credentials: 'include',
 				headers: {

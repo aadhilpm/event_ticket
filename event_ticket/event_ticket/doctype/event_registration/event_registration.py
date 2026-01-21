@@ -9,6 +9,8 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import now_datetime, random_string
 
+from event_ticket.utils import generate_qr_image
+
 
 class EventRegistration(Document):
 	def before_insert(self):
@@ -17,6 +19,10 @@ class EventRegistration(Document):
 	def validate(self):
 		self.total_attendees = len(self.attendees)
 		self.calculate_amount()
+
+	def onload(self):
+		"""Format additional fields for display in grid"""
+		self.format_attendee_additional_fields()
 
 	def calculate_amount(self):
 		"""Calculate total amount for paid events"""
@@ -194,6 +200,9 @@ class EventRegistration(Document):
 		tickets = []
 
 		for attendee in self.attendees:
+			# Build additional fields for email (only show_on_email = 1)
+			additional_fields_html = self.get_additional_fields_html(attendee, event, "email", theme_color)
+
 			ticket = f"""
 			<div style="border: 1px solid #e5e5e5; border-radius: 8px; margin-bottom: 12px; overflow: hidden;">
 				<div style="background: {theme_color}; color: white; padding: 12px 16px;">
@@ -214,6 +223,7 @@ class EventRegistration(Document):
 							<td style="padding: 4px 0;"><strong>Category:</strong></td>
 							<td style="padding: 4px 0;">{attendee.gender}</td>
 						</tr>
+						{additional_fields_html}
 					</table>
 				</div>
 			</div>
@@ -239,7 +249,10 @@ class EventRegistration(Document):
 
 		tickets_html = ""
 		for attendee in self.attendees:
-			qr_image = self.generate_qr_image(attendee.qr_code)
+			qr_image = generate_qr_image(attendee.qr_code)
+
+			# Build additional fields for PDF (only show_on_pdf = 1)
+			additional_fields_html = self.get_additional_fields_html(attendee, event, "pdf", theme_color)
 
 			tickets_html += f"""
 			<div style="page-break-inside: avoid; border: 2px solid {theme_color}; border-radius: 8px; margin-bottom: 20px; overflow: hidden;">
@@ -273,6 +286,7 @@ class EventRegistration(Document):
 										<td style="padding: 4px 15px 4px 0; color: #888;">Category</td>
 										<td>{attendee.gender}</td>
 									</tr>
+									{additional_fields_html}
 								</table>
 							</td>
 						</tr>
@@ -344,7 +358,7 @@ class EventRegistration(Document):
 
 		rows = []
 		for attendee in self.attendees:
-			qr_image = self.generate_qr_image(attendee.qr_code)
+			qr_image = generate_qr_image(attendee.qr_code)
 
 			row = f"""
 			<tr>
@@ -375,37 +389,123 @@ class EventRegistration(Document):
 		"""
 		return html
 
-	def generate_qr_image(self, qr_data):
-		"""Generate QR code image as base64 SVG data URI using pyqrcode (Frappe built-in)"""
-		try:
-			import base64
-			from io import BytesIO
-
-			from pyqrcode import create as qrcreate
-
-			# Create QR code
-			qr = qrcreate(qr_data)
-
-			# Generate SVG
-			stream = BytesIO()
-			qr.svg(stream, scale=4, background="#ffffff", module_color="#000000")
-			svg_data = stream.getvalue().decode()
-			stream.close()
-
-			# Return as base64 data URI
-			svg_b64 = base64.b64encode(svg_data.encode()).decode()
-			return f"data:image/svg+xml;base64,{svg_b64}"
-
-		except ImportError:
-			frappe.log_error("pyqrcode library not found", "QR Code Generation Error")
-			return ""
-		except Exception as e:
-			frappe.log_error(f"QR generation error: {e!s}", "QR Code Generation Error")
-			return ""
-
 	@frappe.whitelist()
 	def resend_email(self):
 		"""Resend confirmation email"""
 		self.email_sent = 0
 		self.send_confirmation_email()
-		return {"message": _("Email sent successfully")}
+
+	def get_ticket_pdf(self):
+		"""
+		Generate and return PDF tickets
+
+		Returns:
+			PDF bytes
+		"""
+		event = frappe.get_doc("Ticket Event", self.event)
+		theme_color = event.theme_color or "#4CAF50"
+		return self.generate_ticket_pdf(event, theme_color)
+
+	def format_attendee_additional_fields(self):
+		"""Format additional fields for all attendees for display in grid"""
+		if not self.attendees:
+			return
+
+		try:
+			# Get event registration fields
+			event = frappe.get_doc("Ticket Event", self.event)
+			if not event.registration_fields:
+				return
+
+			# Create a mapping of field_key to field_label
+			field_labels = {}
+			for field in event.registration_fields:
+				field_labels[field.field_key] = field.field_label
+
+			# Format each attendee's additional fields
+			for attendee in self.attendees:
+				if not attendee.additional_fields:
+					continue
+
+				# Parse the JSON if it's a string
+				if isinstance(attendee.additional_fields, str):
+					try:
+						fields_data = json.loads(attendee.additional_fields)
+					except json.JSONDecodeError:
+						# Already formatted, skip
+						continue
+				else:
+					fields_data = attendee.additional_fields
+
+				if not fields_data or not isinstance(fields_data, dict):
+					continue
+
+				# Format the additional fields into readable text
+				formatted_parts = []
+				for key, value in fields_data.items():
+					label = field_labels.get(key, key.replace("_", " ").title())
+
+					# Handle boolean values
+					if isinstance(value, bool):
+						value = "Yes" if value else "No"
+
+					formatted_parts.append(f"{label}: {value}")
+
+				# Store as pipe-separated text for grid display
+				attendee.additional_fields = " | ".join(formatted_parts)
+
+		except Exception as e:
+			frappe.log_error(f"Error formatting attendee additional_fields: {e!s}")
+
+	def get_additional_fields_html(self, attendee, event, display_type="pdf", theme_color="#4CAF50"):
+		"""
+		Get HTML for additional fields based on display type
+
+		Args:
+			attendee: Event Registration Attendee document
+			event: Ticket Event document
+			display_type: 'pdf', 'email', or 'checkin'
+			theme_color: Theme color for styling
+
+		Returns:
+			HTML string for additional fields
+		"""
+		from event_ticket.utils import format_additional_fields_as_html, get_additional_fields_for_display
+
+		additional_fields = get_additional_fields_for_display(attendee, event, display_type)
+		return format_additional_fields_as_html(additional_fields, display_type, theme_color)
+
+
+# ==========================================
+# Public API Methods (Whitelisted)
+# ==========================================
+
+
+@frappe.whitelist(allow_guest=True)
+def download_tickets(registration_id):
+	"""
+	Public API to download PDF tickets
+
+	Args:
+		registration_id: Event Registration ID
+
+	Returns:
+		PDF file download
+	"""
+	try:
+		if not frappe.db.exists("Event Registration", registration_id):
+			frappe.throw(_("Registration not found"))
+
+		registration = frappe.get_doc("Event Registration", registration_id)
+
+		# Use the DocType method to generate PDF
+		pdf = registration.get_ticket_pdf()
+
+		# Return PDF as response
+		frappe.local.response.filename = f"tickets_{registration_id}.pdf"
+		frappe.local.response.filecontent = pdf
+		frappe.local.response.type = "pdf"
+
+	except Exception as e:
+		frappe.log_error(f"PDF generation error: {e!s}", "Ticket PDF Error")
+		frappe.throw(_("Error generating PDF"))

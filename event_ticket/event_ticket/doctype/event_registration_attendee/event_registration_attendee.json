@@ -60,9 +60,10 @@
   },
   {
    "fieldname": "additional_fields",
-   "fieldtype": "JSON",
-   "hidden": 1,
-   "label": "Additional Fields"
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Additional Fields",
+   "read_only": 1
   },
   {
    "fieldname": "checkin_section",
