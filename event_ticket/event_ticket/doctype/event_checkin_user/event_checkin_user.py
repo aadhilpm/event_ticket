@@ -51,8 +51,8 @@ class EventCheckinUser(Document):
 
 	@frappe.whitelist()
 	def generate_login_qr_code(self):
-		"""Generate QR code for app login using SVG format"""
-		from pyqrcode import create as qrcreate
+		"""Generate QR code for app login as PNG using qrcode library"""
+		import qrcode
 
 		# Get site URL
 		site_url = frappe.utils.get_url()
@@ -72,16 +72,26 @@ class EventCheckinUser(Document):
 		json_str = json.dumps(qr_data)
 		encoded_data = base64.b64encode(json_str.encode()).decode()
 
-		# Generate QR code using pyqrcode
-		qr = qrcreate(encoded_data, error="L")
+		# Generate QR code using qrcode library (works with PIL/Pillow)
+		qr = qrcode.QRCode(
+			version=1,
+			error_correction=qrcode.constants.ERROR_CORRECT_L,
+			box_size=10,
+			border=4,
+		)
+		qr.add_data(encoded_data)
+		qr.make(fit=True)
 
-		# Generate SVG instead of PNG
+		# Create PNG image
+		img = qr.make_image(fill_color="black", back_color="white")
+
+		# Save to BytesIO
 		buffer = BytesIO()
-		qr.svg(buffer, scale=4, background="#ffffff", module_color="#000000")
+		img.save(buffer, format="PNG")
 		buffer.seek(0)
 
-		# Save as SVG file
-		file_name = f"login_qr_{self.operator_email.replace('@', '_').replace('.', '_')}.svg"
+		# Save as PNG file
+		file_name = f"login_qr_{self.operator_email.replace('@', '_').replace('.', '_')}.png"
 
 		# Delete old QR code file if exists
 		if self.login_qr_code:
